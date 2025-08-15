@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Master - Brain Training Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #e94560;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(233, 69, 96, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(233, 69, 96, 0.3);
+        }
+
+        .header h1 {
+            font-size: 3em;
+            background: linear-gradient(45deg, #e94560, #f39c12);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(233, 69, 96, 0.5);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .stat {
+            text-align: center;
+            background: rgba(15, 52, 96, 0.5);
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(233, 69, 96, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #f39c12;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .game-card {
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: #e94560;
+            box-shadow: 0 20px 40px rgba(233, 69, 96, 0.3);
+        }
+
+        .game-card.active {
+            border-color: #f39c12;
+            background: rgba(243, 156, 18, 0.1);
+        }
+
+        .game-card h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            color: #f39c12;
+        }
+
+        .game-card p {
+            margin-bottom: 20px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #e94560, #f39c12);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .game-area {
+            background: rgba(15, 52, 96, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 20px;
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            min-height: 400px;
+        }
+
+        .sequence-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+
+        .sequence-cell {
+            aspect-ratio: 1;
+            background: rgba(26, 26, 46, 0.8);
+            border: 2px solid rgba(233, 69, 96, 0.3);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .sequence-cell:hover {
+            border-color: #e94560;
+            transform: scale(1.05);
+        }
+
+        .sequence-cell.active {
+            background: linear-gradient(45deg, #e94560, #f39c12);
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(233, 69, 96, 0.6);
+        }
+
+        .words-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .word-card {
+            background: rgba(26, 26, 46, 0.8);
+            border: 2px solid rgba(233, 69, 96, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .word-card:hover {
+            border-color: #e94560;
+            transform: translateY(-5px);
+        }
+
+        .word-card.selected {
+            background: linear-gradient(45deg, #e94560, #f39c12);
+            color: white;
+        }
+
+        .numbers-display {
+            text-align: center;
+            font-size: 3em;
+            font-weight: bold;
+            color: #f39c12;
+            margin: 30px 0;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(26, 26, 46, 0.5);
+            border-radius: 15px;
+        }
+
+        .input-area {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .number-input {
+            background: rgba(26, 26, 46, 0.8);
+            border: 2px solid rgba(233, 69, 96, 0.3);
+            border-radius: 15px;
+            padding: 15px 20px;
+            font-size: 1.5em;
+            color: #e94560;
+            text-align: center;
+            width: 300px;
+            margin: 10px;
+        }
+
+        .number-input:focus {
+            outline: none;
+            border-color: #f39c12;
+            box-shadow: 0 0 20px rgba(243, 156, 18, 0.3);
+        }
+
+        .feedback {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.3em;
+            font-weight: bold;
+            min-height: 30px;
+        }
+
+        .feedback.correct {
+            color: #2ecc71;
+        }
+
+        .feedback.incorrect {
+            color: #e74c3c;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(26, 26, 46, 0.8);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #e94560, #f39c12);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .level-indicator {
+            text-align: center;
+            font-size: 1.5em;
+            margin: 20px 0;
+            color: #f39c12;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulsing {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .number-input {
+                width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🧠 Memory Master</h1>
+            <p>Train your brain with these powerful memory exercises</p>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="totalScore">0</div>
+                    <div>Total Score</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="gamesPlayed">0</div>
+                    <div>Games Played</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="bestStreak">0</div>
+                    <div>Best Streak</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="games-grid">
+            <div class="game-card" id="sequenceGame">
+                <h3>🔢 Sequence Memory</h3>
+                <p>Remember and repeat increasingly complex number sequences. Great for working memory!</p>
+                <button class="btn" onclick="startSequenceGame()">Start Game</button>
+            </div>
+
+            <div class="game-card" id="wordGame">
+                <h3>📝 Word Memory</h3>
+                <p>Study a list of words and identify which ones you saw. Perfect for verbal memory training!</p>
+                <button class="btn" onclick="startWordGame()">Start Game</button>
+            </div>
+
+            <div class="game-card" id="numberGame">
+                <h3>🔢 Number Span</h3>
+                <p>Remember longer and longer number sequences. Challenge your digit span memory!</p>
+                <button class="btn" onclick="startNumberGame()">Start Game</button>
+            </div>
+
+            <div class="game-card" id="patternGame">
+                <h3>🎨 Pattern Memory</h3>
+                <p>Memorize visual patterns and recreate them. Excellent for spatial memory!</p>
+                <button class="btn" onclick="startPatternGame()">Start Game</button>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea" style="display: none;">
+            <div class="level-indicator" id="levelIndicator"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <div id="gameContent"></div>
+            <div class="feedback" id="feedback"></div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" id="backBtn" onclick="backToMenu()">Back to Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = {
+            currentGame: null,
+            level: 1,
+            score: 0,
+            streak: 0,
+            totalScore: parseInt(localStorage.getItem('totalScore') || '0'),
+            gamesPlayed: parseInt(localStorage.getItem('gamesPlayed') || '0'),
+            bestStreak: parseInt(localStorage.getItem('bestStreak') || '0')
+        };
+
+        // Update stats display
+        function updateStats() {
+            document.getElementById('totalScore').textContent = gameState.totalScore;
+            document.getElementById('gamesPlayed').textContent = gameState.gamesPlayed;
+            document.getElementById('bestStreak').textContent = gameState.bestStreak;
+        }
+
+        // Save stats to localStorage
+        function saveStats() {
+            localStorage.setItem('totalScore', gameState.totalScore.toString());
+            localStorage.setItem('gamesPlayed', gameState.gamesPlayed.toString());
+            localStorage.setItem('bestStreak', gameState.bestStreak.toString());
+        }
+
+        // Show feedback
+        function showFeedback(message, isCorrect) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = isCorrect ? 'feedback correct' : 'feedback incorrect';
+            
+            if (isCorrect) {
+                gameState.streak++;
+                gameState.score += 10 * gameState.level;
+                gameState.totalScore += 10 * gameState.level;
+                if (gameState.streak > gameState.bestStreak) {
+                    gameState.bestStreak = gameState.streak;
+                }
+            } else {
+                gameState.streak = 0;
+            }
+            
+            updateStats();
+            saveStats();
+        }
+
+        // Update progress bar
+        function updateProgress(current, total) {
+            const progressFill = document.getElementById('progressFill');
+            const percentage = (current / total) * 100;
+            progressFill.style.width = percentage + '%';
+        }
+
+        // Sequence Memory Game
+        let sequenceData = {
+            sequence: [],
+            userInput: [],
+            showingSequence: false
+        };
+
+        function startSequenceGame() {
+            gameState.currentGame = 'sequence';
+            gameState.level = 1;
+            gameState.score = 0;
+            gameState.streak = 0;
+            showGameArea();
+            nextSequenceLevel();
+        }
+
+        function nextSequenceLevel() {
+            document.getElementById('levelIndicator').textContent = `Level ${gameState.level} - Sequence Length: ${gameState.level + 2}`;
+            
+            sequenceData.sequence = [];
+            sequenceData.userInput = [];
+            
+            // Generate random sequence
+            for (let i = 0; i < gameState.level + 2; i++) {
+                sequenceData.sequence.push(Math.floor(Math.random() * 9) + 1);
+            }
+            
+            showSequence();
+        }
+
+        function showSequence() {
+            const gameContent = document.getElementById('gameContent');
+            gameContent.innerHTML = `
+                <div style="text-align: center;">
+                    <h3>Memorize this sequence:</h3>
+                    <div class="numbers-display" id="sequenceDisplay"></div>
+                    <p>Watch carefully...</p>
+                </div>
+            `;
+            
+            sequenceData.showingSequence = true;
+            let index = 0;
+            
+            const showNextNumber = () => {
+                const display = document.getElementById('sequenceDisplay');
+                if (index < sequenceData.sequence.length) {
+                    display.textContent = sequenceData.sequence[index];
+                    display.classList.add('pulsing');
+                    setTimeout(() => display.classList.remove('pulsing'), 500);
+                    index++;
+                    setTimeout(showNextNumber, 1000);
+                } else {
+                    setTimeout(showSequenceInput, 500);
+                }
+            };
+            
+            setTimeout(showNextNumber, 1000);
+        }
+
+        function showSequenceInput() {
+            const gameContent = document.getElementById('gameContent');
+            gameContent.innerHTML = `
+                <div style="text-align: center;">
+                    <h3>Enter the sequence:</h3>
+                    <div class="sequence-grid" id="sequenceGrid"></div>
+                    <p>Click the numbers in the correct order</p>
+                </div>
+            `;
+            
+            const grid = document.getElementById('sequenceGrid');
+            const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+            
+            numbers.forEach(num => {
+                const cell = document.createElement('div');
+                cell.className = 'sequence-cell';
+                cell.textContent = num;
+                cell.onclick = () => selectSequenceNumber(num);
+                grid.appendChild(cell);
+            });
+            
+            sequenceData.showingSequence = false;
+        }
+
+        function selectSequenceNumber(num) {
+            if (sequenceData.showingSequence) return;
+            
+            sequenceData.userInput.push(num);
+            
+            // Check if input matches so far
+            const currentIndex = sequenceData.userInput.length - 1;
+            if (sequenceData.userInput[currentIndex] !== sequenceData.sequence[currentIndex]) {
+                showFeedback('Incorrect! Try again.', false);
+                setTimeout(() => {
+                    if (gameState.level > 1) {
+                        gameState.level = Math.max(1, gameState.level - 1);
+                    }
+                    nextSequenceLevel();
+                }, 1500);
+                return;
+            }
+            
+            // Check if sequence is complete
+            if (sequenceData.userInput.length === sequenceData.sequence.length) {
+                showFeedback('Perfect! Moving to next level.', true);
+                gameState.level++;
+                setTimeout(nextSequenceLevel, 1500);
+            } else {
+                // Visual feedback for correct partial input
+                const cells = document.querySelectorAll('.sequence-cell');
+                cells.forEach(cell => {
+                    if (parseInt(cell.textContent) === num) {
+                        cell.classList.add('active');
+                        setTimeout(() => cell.classList.remove('active'), 300);
+                    }
+                });
+            }
+        }
+
+        // Word Memory Game
+        let wordData = {
+            studyWords: [],
+            testWords: [],
+            selectedWords: [],
+            phase: 'study'
+        };
+
+        const wordLists = [
+            ['cat', 'dog', 'house', 'tree', 'car', 'book'],
+            ['apple', 'river', 'mountain', 'phone', 'music', 'flower', 'ocean'],
+            ['elephant', 'butterfly', 'keyboard', 'television', 'umbrella', 'sandwich', 'basketball', 'chocolate'],
+            ['magnificent', 'adventure', 'mysterious', 'wonderful', 'dangerous', 'beautiful', 'incredible', 'fascinating', 'extraordinary']
+        ];
+
+        function startWordGame() {
+            gameState.currentGame = 'word';
+            gameState.level = 1;
+            gameState.score = 0;
+            gameState.streak = 0;
+            showGameArea();
+            nextWordLevel();
+        }
+
+        function nextWordLevel() {
+            document.getElementById('levelIndicator').textContent = `Level ${gameState.level} - Word Memory`;
+            
+            const levelIndex = Math.min(gameState.level - 1, wordLists.length - 1);
+            const allWords = [...wordLists[levelIndex]];
+            
+            // Select study words
+            wordData.studyWords = allWords.slice(0, Math.min(4 + gameState.level, allWords.length));
+            
+            // Create test words (study words + distractors)
+            wordData.testWords = [...wordData.studyWords];
+            
+            // Add distractor words
+            const remainingWords = allWords.filter(word => !wordData.studyWords.includes(word));
+            const numDistractors = Math.min(wordData.studyWords.length, remainingWords.length);
+            
+            for (let i = 0; i < numDistractors; i++) {
+                const randomIndex = Math.floor(Math.random() * remainingWords.length);
+                wordData.testWords.push(remainingWords.splice(randomIndex, 1)[0]);
+            }
+            
+            // Shuffle test words
+            wordData.testWords.sort(() => Math.random() - 0.5);
+            wordData.selectedWords = [];
+            wordData.phase = 'study';
+            
+            showWordStudy();
+        }
+
+        function showWordStudy() {
+            const gameContent = document.getElementById('gameContent');
+            gameContent.innerHTML = `
+                <div style="text-align: center;">
+                    <h3>Study these words:</h3>
+                    <div class="words-grid">
+                        ${wordData.studyWords.map(word => `<div class="word-card">${word}</div>`).join('')}
+                    </div>
+                    <p>You have 10 seconds to memorize them...</p>
+                    <button class="btn" id="startTestBtn" onclick="showWordTest()" disabled>Get Ready...</button>
+                </div>
+            `;
+            
+            let countdown = 10;
+            const btn = document.getElementById('startTestBtn');
+            
+            const timer = setInterval(() => {
+                countdown--;
+                btn.textContent = `Get Ready... ${countdown}`;
+                
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    btn.textContent = 'Start Test';
+                    btn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        function showWordTest() {
+            wordData.phase = 'test';
+            const gameContent = document.getElementById('gameContent');
+            gameContent.innerHTML = `
+                <div style="text-align: center;">
+                    <h3>Select the words you studied:</h3>
+                    <div class="words-grid" id="testWordsGrid">
+                        ${wordData.testWords.map(word => 
+                            `<div class="word-card" onclick="selectWord('${word}')">${word}</div>`
+                        ).join('')}
+                    </div>
+                    <button class="btn" onclick="checkWordAnswers()" style="margin-top: 20px;">Check Answers</button>
+                </div>
+            `;
+        }
+
+        function selectWord(word) {
+            if (wordData.phase !== 'test') return;
+            
+            const wordCards = document.querySelectorAll('.word-card');
+            wordCards.forEach(card => {
+                if (card.textContent === word) {
+                    if (wordData.selectedWords.includes(word)) {
+                        // Deselect
+                        wordData.selectedWords = wordData.selectedWords.filter(w => w !== word);
+                        card.classList.remove('selected');
+                    } else {
+                        // Select
+                        wordData.selectedWords.push(word);
+                        card.classList.add('selected');
+                    }
+                }
+            });
+        }
+
+        function checkWordAnswers() {
+            let correct = 0;
+            let total = wordData.studyWords.length;
+            
+            // Count correct selections
+            wordData.selectedWords.forEach(word => {
+                if (wordData.studyWords.includes(word)) {
+                    correct++;
+                }
+            });
+            
+            // Count missed words
+            wordData.studyWords.forEach(word => {
+                if (!wordData.selectedWords.includes(word)) {
+                    correct--; // Penalty for missed words
+                }
+            });
+            
+            const percentage = Math.max(0, (correct / total) * 100);
+            
+            if (percentage >= 70) {
+                showFeedback(`Great! You got ${Math.round(percentage)}% correct!`, true);
+                gameState.level++;
+                setTimeout(nextWordLevel, 2000);
+            } else {
+                showFeedback(`${Math.round(percentage)}% correct. Try again!`, false);
+                setTimeout(nextWordLevel, 2000);
+            }
+        }
+
+        // Number Span Game
+        let numberData = {
+            currentNumber: '',
+            userInput: ''
+        };
+
+        function startNumberGame() {
+            gameState.currentGame = 'number';
+            gameState.level = 1;
+            gameState.score = 0;
+            gameState.streak = 0;
+            showGameArea();
+            nextNumberLevel();
+        }
+
+        function nextNumberLevel() {
+            document.getElementById('levelIndicator').textContent = `Level ${gameState.level} - Digit Span: ${gameState.level + 3}`;
+            
+            // Generate random number with increasing digits
+            numberData.currentNumber = '';
+            for (let i = 0; i < gameState.level + 3; i++) {
+                numberData.currentNumber += Math.floor(Math.random() * 10);
+            }
+            
+            showNumberSequence();
+        }
+
+        function showNumberSequence() {
+            const gameContent = document.getElementById('gameContent');
+            gameContent.innerHTML = `
+                <div style="text-align: center;">
+                    <h3>Memorize this number:</h3>
+                    <div class="numbers-display">${numberData.currentNumber}</div>
+                    <p>You have 5 seconds...</p>
+                </div>
+            `;
+            
+            setTimeout(showNumberInput, 5000);
+        }
+
+        function showNumberInput() {
+            const gameContent = document.getElementById('gameContent');
+            gameContent.innerHTML = `
+                <div style="text-align: center;">
+                    <h3>Enter the number:</h3>
+                    <div class="input-area">
+                        <input type="text" class="number-input" id="numberInput" placeholder="Enter the number..." maxlength="${numberData.currentNumber.length}">
+                        <br>
+                        <button class="btn" onclick="checkNumberAnswer()" style="margin-top: 15px;">Check Answer</button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('numberInput').focus();
+            document.getElementById('numberInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkNumberAnswer();
+                }
+            });
+        }
+
+        function checkNumberAnswer() {
+            const input = document.getElementById('numberInput').value;
+            
+            if (input === numberData.currentNumber) {
+                showFeedback('Perfect! Correct number!', true);
+                gameState.level++;
+                setTimeout(nextNumberLevel, 1500);
+            } else {
+                showFeedback(`Incorrect! The number was: ${numberData.currentNumber}`, false);
+                if (gameState.level > 1) {
+                    gameState.level = Math.max(1, gameState.level - 1);
+                }
+                setTimeout(nextNumberLevel, 2500);
+            }
+        }
+
+        // Pattern Memory Game
+        let patternData = {
+            pattern: [],
+            userPattern: [],
+            gridSize: 3
+        };
+
+        function startPatternGame() {
+            gameState.currentGame = 'pattern';
+            gameState.level = 1;
+            gameState.score = 0;
+            gameState.streak = 0;
+            showGameArea();
+            nextPatternLevel();
+        }
+
+        function nextPatternLevel() {
+            document.getElementById('levelIndicator').textContent = `Level ${gameState.level} - Pattern Memory`;
+            
+            patternData.gridSize = Math.min(3 + Math.floor(gameState.level / 3), 5);
+            patternData.pattern = [];
+            patternData.userPattern = [];
+            
+            // Generate random pattern
+            const numCells = Math.min(3 + gameState.level, patternData.gridSize * patternData.gridSize - 1);
+            const totalCells = patternData.gridSize * patternData.gridSize;
+            
+            while (patternData.pattern.length < numCells) {
+                const cell = Math.floor(Math.random() * totalCells);
+                if (!patternData.pattern.includes(cell)) {
+                    patternData.pattern.push(cell);
+                }
+            }
+            
+            showPattern();
+        }
+
+        function showPattern() {
+            const gameContent = document.getElementById('gameContent');
+            gameContent.innerHTML = `
+                <div style="text-align: center;">
+                    <h3>Memorize this pattern:</h3>
+                    <div class="sequence-grid" id="patternGrid" style="grid-template-columns: repeat(${patternData.gridSize}, 1fr); max-width: ${patternData.gridSize * 70}px;"></div>
+                    <p>You have 3 seconds...</p>
+                </div>
+            `;
+            
+            const grid = document.getElementById('patternGrid');
+            const totalCells = patternData.gridSize * patternData.gridSize;
+            
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'sequence-cell';
+                if (patternData.pattern.includes(i)) {
+                    cell.classList.add('active');
+                }
+                grid.appendChild(cell);
+            }
+            
+            setTimeout(showPatternInput, 3000);
+        }
+
+        function showPatternInput() {
+            const gameContent = document.getElementById('gameContent');
+            gameContent.innerHTML = `
+                <div style="text-align: center;">
+                    <h3>Recreate the pattern:</h3>
+                    <div class="sequence-grid" id="patternInputGrid" style="grid-template-columns: repeat(${patternData.gridSize}, 1fr); max-width: ${patternData.gridSize * 70}px;"></div>
+                    <button class="btn" onclick="checkPatternAnswer()" style="margin-top: 15px;">Check Pattern</button>
+                </div>
+            `;
+            
+            const grid = document.getElementById('patternInputGrid');
+            const totalCells = patternData.gridSize * patternData.gridSize;
+            
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'sequence-cell';
+                cell.onclick = () => togglePatternCell(i, cell);
+                grid.appendChild(cell);
+            }
+        }
+
+        function togglePatternCell(index, cellElement) {
+            if (patternData.userPattern.includes(index)) {
+                patternData.userPattern = patternData.userPattern.filter(i => i !== index);
+                cellElement.classList.remove('active');
+            } else {
+                patternData.userPattern.push(index);
+                cellElement.classList.add('active');
+            }
+        }
+
+        function checkPatternAnswer() {
+            const correct = patternData.pattern.length === patternData.userPattern.length &&
+                           patternData.pattern.every(cell => patternData.userPattern.includes(cell));
+            
+            if (correct) {
+                showFeedback('Perfect! Pattern matched!', true);
+                gameState.level++;
+                setTimeout(nextPatternLevel, 1500);
+            } else {
+                showFeedback('Incorrect pattern. Try again!', false);
+                if (gameState.level > 1) {
+                    gameState.level = Math.max(1, gameState.level - 1);
+                }
+                setTimeout(nextPatternLevel, 1500);
+            }
+        }
+
+        // UI Functions
+        function showGameArea() {
+            document.querySelector('.games-grid').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'block';
+            
+            // Mark active game
+            document.querySelectorAll('.game-card').forEach(card => card.classList.remove('active'));
+            document.getElementById(gameState.currentGame + 'Game').classList.add('active');
+            
+            gameState.gamesPlayed++;
+            updateStats();
+            saveStats();
+        }
+
+        function backToMenu() {
+            document.querySelector('.games-grid').style.display = 'grid';
+            document.getElementById('gameArea').style.display = 'none';
+            
+            // Reset game state
+            gameState.currentGame = null;
+            gameState.level = 1;
+            gameState.score = 0;
+            
+            // Remove active states
+            document.querySelectorAll('.game-card').forEach(card => card.classList.remove('active'));
+            
+            // Clear game content
+            document.getElementById('gameContent').innerHTML = '';
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('progressFill').style.width = '0%';
+        }
+
+        // Initialize the app
+        updateStats();
+        
+        // Add some visual enhancements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add floating particles effect
+            function createParticle() {
+                const particle = document.createElement('div');
+                particle.style.cssText = `
+                    position: fixed;
+                    width: 4px;
+                    height: 4px;
+                    background: rgba(233, 69, 96, 0.6);
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: -1;
+                    left: ${Math.random() * 100}vw;
+                    top: 100vh;
+                    animation: floatUp 8s linear forwards;
+                `;
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => {
+                    particle.remove();
+                }, 8000);
+            }
+            
+            // Add CSS animation for floating particles
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes floatUp {
+                    to {
+                        transform: translateY(-100vh) rotate(360deg);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Create particles periodically
+            setInterval(createParticle, 2000);
+            
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    backToMenu();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
